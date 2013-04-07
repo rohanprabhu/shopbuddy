@@ -5,7 +5,9 @@ var getURLParameter = function(name) {
 };
 
 var userId = getURLParameter("userId");
+var isBuddy = getURLParameter("isbuddy") == "true";
 var rdLookup = [];
+var sugShow = false;
 
 var lookupProductByTitle = function(title) {
     for(var i=0; i<products.length; i++) {
@@ -16,7 +18,6 @@ var lookupProductByTitle = function(title) {
 };
 
 var score = function(rating) {
-    console.log(rating);
     return rating.buy - rating.dontbuy;
 };
 
@@ -60,6 +61,12 @@ var showRatings = function() {
 
 var pushRatings = function(ratingsObject) {
     var productIdx = lookupProductByTitle(ratingsObject.productTitle);
+    var message = '<div style="padding: 3pt"><span style="color:' + colorHash(ratingsObject.userId) + '">' + ratingsObject.userId + '</span>' +
+            ((ratingsObject.rating == "buy")?' <strong>recommended</strong> ':' <strong>advised against</strong> ') +
+            '<em>' + ratingsObject.productTitle + '</em>';
+    
+    document.getElementById("chatBox").innerHTML += message;
+    
     if(productIdx in ratings) {
         if(ratingsObject.rating == "buy") {
             ratings[productIdx].buy += 1;
@@ -81,6 +88,7 @@ var pushRatings = function(ratingsObject) {
     }
     
     showRatings();
+    scrollToTop();
 };
 
 var ShopBuddyClient = function() {
@@ -142,6 +150,36 @@ var plainPushMessage = function(message) {
 };
 
 var products = [];
+var sugCtr = 0;
+
+var pushSuggestion = function(message) {
+    message.payload = JSON.parse(message.payload);
+    var imessage = '<div style="padding: 3pt;"><span style="color:' + colorHash(message.userId) + '">' + message.userId + '</span> <strong>suggested</strong> ' +
+            '<em>' + message.payload.productTitle + '</em></div>';
+    
+    sugCtr++;
+    
+    document.getElementById("chatBox").innerHTML += imessage;
+    document.getElementById("suggestToggle").innerHTML = "Suggestions (" + sugCtr + ")";
+    
+    var imessage = '<div style="padding: 3pt; background: #F4F4F4; float: left; margin-right: 5pt; border: 1px dashed #323232; margin: 1pt;">' +
+                   ' <img src="' + message.payload.imgSrc + '" style="width: 75px; height: 75px; float: left" />' +
+                   ' <div style="float: left; width: 250px">' +
+            '  <div style="padding-left: 3pt;"><a target="_blank" href="' + message.payload.productUrl + '"><strong>' + message.payload.productTitle + '</strong></a></div>' +
+            '  <div style="padding-left: 3pt; font-size: 11pt">Rs. ' + message.payload.productCost + '</div>' +
+            '  <div style="padding-left: 3pt; font-size: 10pt; text-align: right">Suggested by <strong style="color:' + colorHash(message.userId) + '">' + message.userId + "</strong></div>" +
+                   ' </div>' +
+                   ' <div style="clear: both"></div>' +
+                   '</div>';
+    
+    document.getElementById("suggestContainer").innerHTML += imessage;
+    
+    if(sugShow == false) {
+        $("#suggestContainer").hide();
+    }
+    
+    scrollToTop();
+};
 
 var opinionPushMessage = function(message) {
     message.payload = JSON.parse(message.payload);
@@ -150,26 +188,30 @@ var opinionPushMessage = function(message) {
 
     var productInfoTemplate = '<div class="productInfo">' +
             '<div class="title"><strong>' + message.userId + '</strong> wants your opinion on</div>' +
-            '<div class="content">' +
+            ' <div class="content">' +
             '  <img style="float: left; width: 125px; height: 125px; border: 1px dotted #E9E9E9" src="' + message.payload.imgSrc + '" />' +
             '  <div class="rightContent">' +
-            '    <a target="_blank" href="' + message.productUrl + '"><h2>' + message.payload.productTitle + '</h2></a>' +
+            '    <a target="_blank" href="' + message.payload.productUrl + '"><h2>' + message.payload.productTitle + '</h2></a>' +
             '    <span class="manufacturer">by ' + message.payload.productManuf + '</span><br />' +
-            '    <span class="price">₹ ' + message.payload.productCost + '</span>' +
-
-            '<div style="clear: both"></div>' +
-
-            '<h3>Your opinion</h3>' +
-
+            '    <span class="price">₹ ' + message.payload.productCost + '</span>';
+    
+    if(isBuddy) {
+        productInfoTemplate += '<h3>Your opinion</h3>' +
             '<div id="voting_' + prodIndex +'" class="voting">' +
             ' <input name="' + prodIndex + '" class="buyVote" id="buy_' + prodIndex +'" type="button" value="Buy" />' +
             ' <input name="' + prodIndex + '" class = "dontBuyVote" id="dnb_' + prodIndex +'" type="button" value="Don\'t Buy" />' +
             ' <input name="' + prodIndex + '" id="gof_' + prodIndex +'" type="button" value="Get one for me too" />' +
-            '</div>' +
-            '</div>' +
+            '</div>';
+    } else {
+        productInfoTemplate += '<h3>You asked your friends opinion on this</h3>';
+    }
+    
+    productInfoTemplate += '</div>' +
             '<div style="clear: both"></div>' +
             '</div>' +
             '</div>';
+    
+    console.log(productInfoTemplate);
     
     document.getElementById("chatBox").innerHTML += productInfoTemplate;
     
@@ -196,7 +238,7 @@ var colorHash = function(string) {
     var index = 0;
     var colors = [
         "#FF0000",
-        "#00FF00",
+        "#3EA99F",
         "#0032FF"
     ];
 
@@ -232,7 +274,7 @@ var Poller = function(namespace, callback) {
 
     var polling = function() {
         shopBuddyClient.getMessages(namespace, latestId, semiCallback);
-        setTimeout(polling, 1200);
+        setTimeout(polling, 400);
     };
 
     shopBuddyClient.getMessages(namespace, "-1", function(data) {
@@ -283,6 +325,17 @@ $(document).ready(function() {
         }
     });
     
+    var suggestionsPoller = new Poller("suggestionsChannel", function(messages) {
+        if(typeof messages == "undefined" || messages == null) {
+            return;
+        }
+        
+        for(var i=0; i<messages.length; i++) {
+            var messageObject = JSON.parse(messages[i].body);
+            pushSuggestion(messageObject);
+        }
+    });
+    
     $("#chatBox").delegate(".buyVote", "click", function() {
         var pi = this.getAttribute("name");
         var productTitle = products[pi].productTitle;
@@ -291,7 +344,7 @@ $(document).ready(function() {
             opacity: 0,
         }, 500, (function(_pi) {
             return function() {
-                $("#voting_" + _pi).html("You <strong style=\"color: #00FF00\">recommended</strong> this product. <em>Thanks buddy!</em>");
+                $("#voting_" + _pi).html("You <strong style=\"color: #3EA99F\">recommended</strong> this product. <em>Thanks buddy!</em>");
                 $("#voting_" + _pi).animate({
                     opacity: 1
                 }, 400);
@@ -299,6 +352,7 @@ $(document).ready(function() {
         })(pi));
 
         shopBuddyClient.pushMessage("ratingsChannel", {
+            "userId": userId,
             "pushType": "ratings",
             "rating": "buy",
             "productTitle": productTitle
@@ -321,6 +375,7 @@ $(document).ready(function() {
         })(pi));
 
         shopBuddyClient.pushMessage("ratingsChannel", {
+            "userId": userId,
             "pushType": "ratings",
             "rating": "dontbuy",
             "productTitle": productTitle
@@ -342,4 +397,34 @@ $(document).ready(function() {
             $("#chatLineInp").focus();
         }
     });
+
+    $("#suggestToggle").click(function() {
+        if(sugShow == false) {
+            $("#suggestContainer").show();
+            
+            $("#suggestContainer").animate({
+                height: 90
+            }, 400);
+            sugShow = true;
+            $("#chatBox").animate({
+                height: 400
+            }, 400);
+        } else {
+            $("#suggestContainer").animate({
+                height: 0
+            }, 400, function() {
+                $("#suggestContainer").hide();
+            });
+            sugShow = false;
+            $("#chatBox").animate({
+                height: 500
+            }, 400);
+        }
+    });
+    
+    $("#suggestContainer").animate({
+        height: 0
+    }, 0);
+    
+    $("#title_h2").html('ShopBuddy <span style="font-size: 10pt;">(Logged in as <span style="color:' + colorHash(userId) + '">' + userId + '</span>)</span>');
 });

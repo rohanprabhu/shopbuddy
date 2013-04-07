@@ -19,6 +19,11 @@ body {
 	font-size: 10pt;
 }
 
+a {
+    color: #1A76B9;
+    text-decoration: none;
+}
+
 .userMessage {
 	float: left;
 	text-align: left;
@@ -70,7 +75,7 @@ body {
 #chatBox {
 	float: left;
 	padding: 5pt;
-	height: 350px;
+	height: 500px;
 	overflow-y: scroll;
 	width: 783px;
 	border-left: 1px solid #000000;
@@ -106,7 +111,7 @@ body {
 }
 
 .productInfo {
-    border: 1px dashed #000000;
+    border: 1px dotted #000000;
     padding: 3pt;
     margin: 1pt;
     font-size: 10pt;
@@ -158,22 +163,51 @@ body {
     background: #E8E8E8;
     padding: 3pt;
 }
+
+#suggestToggle {
+    font-size: 11pt;
+    font-weight: bold;
+    padding: 3pt;
+    background: #F4F4F4;
+    border: 1px solid #787878;
+    cursor: pointer;
+}
+
+#suggestions {
+    margin-bottom: 3pt;
+}
+
+#suggestContainer {
+    height: 90px;
+    background: #E1E1E1;
+    border: 1px solid #787878;
+    border-top: none;
+}
     </style>
   </head>
 
   <body>
   	<div id="title">
-  	  <h2>ShopBuddy</h2>
+  	  <h2 id="title_h2">ShopBuddy</h2>
   	</div>
-
+  	
+  	<div id="suggestions">
+         <div id="suggestToggle">Suggestions</div>
+         <div id="suggestContainer">
+         
+         </div>
+        </div>
   	<div id="chatBoxParent">
   	  <div id="friends">
   	  	<div id="friends_title">Buddies</div>
+  	<div class="friend">
+  	  <strong>rohan</strong>
+  	</div>
         <div class="friend">
-          Ayush
+          ayushch
         </div>
         <div class="friend">
-          Ganessh
+          ganesh
         </div>
   	  </div>
   	  <div id="chatBox">

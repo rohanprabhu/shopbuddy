@@ -5,6 +5,7 @@
     <meta http-equiv="content-type" content="text/hmtl; charset=utf-8" />
 
     <script type="text/javascript" src="scripts/libs/jquery.js"></script>
+    <script type="text/javascript" src="scripts/libs/jquery.cookie.js"></script>
     <script data-main="scripts/main" src="scripts/require.js"></script>
 
     <style type="text/css">
@@ -71,7 +72,7 @@ body {
 	padding: 5pt;
 	height: 350px;
 	overflow-y: scroll;
-	width: 683px;
+	width: 783px;
 	border-left: 1px solid #000000;
 }
 
@@ -103,6 +104,60 @@ body {
 	background: #E8E8E8;
 	padding: 3pt;
 }
+
+.productInfo {
+    border: 1px dashed #000000;
+    padding: 3pt;
+    margin: 1pt;
+    font-size: 10pt;
+}
+
+.productInfo .title {
+    background: #E8E8E8;
+    padding: 3pt;
+}
+
+.productInfo .content {
+    background: #F2F2F2;
+    padding: 3pt;
+}
+
+.rightContent {
+    float: left;
+    margin-left: 3pt;
+}
+
+.rightContent p {
+    margin-top: 0pt;
+    margin-bottom: 0pt;
+}
+
+.rightContent h2 {
+    paddin-top: 0pt;
+    margin-top: 0pt;
+    margin-bottom: 0pt;
+}
+
+.price {
+    padding-top: 2pt;
+    color: #FF3400;
+    font-weight: bold;
+    font-size: 12pt;
+}
+
+.manufacturer {
+    font-size: 11pt;
+    font-weight: normal;
+}
+
+#productListing {
+    float: left;
+}
+
+.plTitle {
+    background: #E8E8E8;
+    padding: 3pt;
+}
     </style>
   </head>
 
@@ -121,7 +176,16 @@ body {
           Ganessh
         </div>
   	  </div>
-  	  <div id="chatBox"></div>
+  	  <div id="chatBox">
+          </div>
+          
+          <div id="productListing">
+           <div class="plTitle">
+          Your friends voted on:
+           </div>
+           <div id="productList">
+           </div>
+          </div>
 
   	  <div id="chatLine">
   	    <input type="text" id="chatLineInp" />

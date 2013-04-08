@@ -155,7 +155,7 @@ var sugCtr = 0;
 var pushSuggestion = function(message) {
     message.payload = JSON.parse(message.payload);
     var imessage = '<div style="padding: 3pt;"><span style="color:' + colorHash(message.userId) + '">' + message.userId + '</span> <strong>suggested</strong> ' +
-            '<em>' + message.payload.productTitle + '</em></div>';
+            '<em><a target="_blank" href="' + message.payload.productUrl + '">' + message.payload.productTitle + '</a></em></div>';
     
     sugCtr++;
     
